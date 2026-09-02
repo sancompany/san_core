@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — San & Co.</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../assets/logo/logo-sanco.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/main.css">
+<link rel="stylesheet" href="../css/sections/admin.css">
+</head>
+<body class="admin-body">
+
+<div class="admin-login">
+  <div class="admin-login__brand">
+    <img src="../assets/logo/logo-sanco.png" alt="Brasão San & Co.">
+    <span>San <span class="amp">&amp;</span> Co.</span>
+    <small>Painel administrativo — Core</small>
+  </div>
+
+  <div class="admin-login__panel">
+    <form id="form-admin-login" novalidate>
+      <div class="form-field">
+        <label for="admin-email">E-mail</label>
+        <input type="email" id="admin-email" name="email" required autocomplete="username">
+      </div>
+      <div class="form-field">
+        <label for="admin-senha">Senha</label>
+        <input type="password" id="admin-senha" name="senha" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-primary">Entrar</button>
+    </form>
+  </div>
+
+  <p class="admin-login__note">Acesso restrito. Autenticação via Supabase a ser conectada.</p>
+</div>
+
+
+<script src="../js/admin.js"></script>
+</body>
+</html>

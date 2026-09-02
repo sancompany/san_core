@@ -1,0 +1,205 @@
+.diagrama {
+  padding-block: clamp(1.5rem, 5vw, 2.5rem) var(--section-y);
+}
+
+.diagrama__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.diagrama__caption {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+}
+
+.diagrama__frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 640px;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0, transparent 15%, var(--border-hair) 15.4%, transparent 15.8%),
+    radial-gradient(circle at 50% 50%, transparent 0, transparent 30%, var(--border-hair) 30.4%, transparent 30.8%),
+    radial-gradient(circle at 50% 50%, transparent 0, transparent 45%, var(--border-hair) 45.4%, transparent 45.8%);
+}
+
+.diagrama__lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.diagrama__lines line {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+  stroke-dasharray: 2 7;
+  animation: dash-flow 5.5s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .diagrama__lines line { animation: none; }
+}
+@keyframes dash-flow {
+  to { stroke-dashoffset: -180; }
+}
+
+.node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--text-primary);
+}
+
+.node__dot {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: var(--font-mono);
+  line-height: 1.25;
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--border-strong);
+  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+
+/* Núcleo — fixo, sempre no centro */
+.node--core {
+  z-index: 2;
+}
+.node--core .node__dot {
+  width: 132px;
+  height: 132px;
+  font-size: 0.9rem;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 0 var(--gold-glow);
+  animation: pulse-core 3.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .node--core .node__dot { animation: none; }
+}
+@keyframes pulse-core {
+  0%, 100% { box-shadow: 0 0 0 0 var(--gold-glow); }
+  50% { box-shadow: 0 0 0 16px transparent; }
+}
+
+/* Operação — nó grande, órbita distante */
+.node--live .node__dot {
+  width: 108px;
+  height: 108px;
+  font-size: 0.8rem;
+  border-style: solid;
+  border-color: var(--gold-dim);
+}
+.node--live .node__label { color: var(--gold-dim); }
+
+/* Em breve — nó médio, órbita intermediária */
+.node--soon .node__dot {
+  width: 76px;
+  height: 76px;
+  font-size: 0.72rem;
+  border-style: dashed;
+  opacity: 0.8;
+}
+
+/* Ideia — nó pequeno, órbita próxima do núcleo */
+.node--idea .node__dot {
+  width: 46px;
+  height: 46px;
+  font-size: 0.6rem;
+  border-style: dotted;
+  opacity: 0.55;
+}
+.node--idea .node__label { opacity: 0.6; }
+
+.node:not(.node--core):hover .node__dot,
+.node:not(.node--core):focus-visible .node__dot {
+  border-color: var(--gold);
+}
+
+.node__label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+/* ===== Card sobreposto ===== */
+.projeto-card {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: var(--gutter);
+  background: rgba(10, 8, 6, 0.75);
+  backdrop-filter: blur(4px);
+}
+.projeto-card.is-open { display: flex; }
+
+.projeto-card__panel {
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-m);
+  padding: 2.25rem;
+  position: relative;
+  transform: translateY(10px);
+  opacity: 0;
+  animation: card-in var(--dur-med) var(--ease-out-strong) forwards;
+}
+@keyframes card-in {
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.projeto-card__close {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.1rem;
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 1.3rem;
+  line-height: 1;
+}
+.projeto-card__close:hover { color: var(--text-primary); }
+
+.projeto-card__status {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--gold);
+  border: 1px solid var(--border-strong);
+  border-radius: 20px;
+  padding: 0.25rem 0.7rem;
+  margin-bottom: 1rem;
+}
+.projeto-card__status[data-status="em breve"],
+.projeto-card__status[data-status="ideia"] { color: var(--text-tertiary); }
+
+.projeto-card__panel h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.35rem;
+}
+.projeto-card__area {
+  color: var(--gold-dim);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+.projeto-card__desc {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.65;
+  margin-bottom: 1.75rem;
+}

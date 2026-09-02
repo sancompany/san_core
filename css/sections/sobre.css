@@ -1,0 +1,26 @@
+.sobre {
+  padding-block: var(--section-y);
+}
+
+.sobre .container {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: start;
+}
+
+.sobre__head h2 {
+  font-size: clamp(1.9rem, 3.2vw, 2.4rem);
+  max-width: 13ch;
+}
+
+.sobre__body p {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  font-size: 1.03rem;
+}
+.sobre__body p + p { margin-top: 1.4rem; }
+
+@media (max-width: 800px) {
+  .sobre .container { grid-template-columns: 1fr; }
+}

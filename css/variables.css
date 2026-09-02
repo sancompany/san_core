@@ -1,0 +1,51 @@
+:root {
+  /* ===== Cor — base do ecossistema ===== */
+  --bg-base: #14110E;        /* fundo principal — marrom torrado quase preto */
+  --bg-elevated: #1F1A16;    /* cards, faixas alternadas, header */
+  --bg-elevated-2: #241E19;  /* hover sobre elementos elevados */
+
+  --gold: #D4AF37;           /* marca — ação primária, foco, linha de progresso */
+  --gold-dim: #8C7530;       /* dourado apagado — bordas, ícones secundários */
+  --gold-glow: rgba(212, 175, 55, 0.28);
+
+  --blue: #1E6FB8;           /* marca — links de domínio, estado secundário */
+  --blue-dim: #2A4A66;
+
+  --crimson: #A32419;        /* do brasão — reservado: indicador ao vivo, watermark */
+  --crimson-glow: rgba(163, 36, 25, 0.22);
+
+  --text-primary: #F2ECE1;   /* off-white quente */
+  --text-secondary: #AB9C8B; /* cinza-marrom, corpo secundário */
+  --text-tertiary: #6F6355;  /* rótulos discretos, legendas */
+
+  --border: rgba(212, 175, 55, 0.14);
+  --border-strong: rgba(212, 175, 55, 0.32);
+  --border-hair: rgba(242, 236, 225, 0.08);
+
+  /* ===== Tipografia — três papéis distintos ===== */
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;   /* títulos e voz editorial */
+  --font-body: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif; /* corpo, UI */
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace; /* dado, domínio, rótulo técnico */
+
+  /* ===== Espaçamento / layout ===== */
+  --container: 1240px;
+  --gutter: clamp(1.5rem, 5vw, 4.5rem);
+  --section-y: clamp(5.5rem, 11vw, 10rem);
+  --radius-s: 3px;
+  --radius-m: 8px;
+
+  /* ===== Movimento ===== */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-strong: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 200ms;
+  --dur-med: 500ms;
+  --dur-slow: 1000ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-med: 0ms;
+    --dur-slow: 0ms;
+  }
+}

@@ -1,0 +1,65 @@
+.estrutura {
+  padding-block: var(--section-y);
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border-hair);
+  border-bottom: 1px solid var(--border-hair);
+}
+
+.estrutura .container {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(2rem, 6vw, 5rem);
+}
+
+.estrutura__head {
+  position: sticky;
+  top: 6rem;
+  align-self: start;
+}
+.estrutura__head h2 {
+  font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+  margin-top: 0.6rem;
+  max-width: 12ch;
+}
+.estrutura__cta { margin-top: 2.25rem; }
+
+.pilares { display: grid; }
+
+.pilar {
+  display: grid;
+  grid-template-columns: 4rem 1fr;
+  gap: 1.5rem;
+  padding-block: 2.4rem;
+  border-top: 1px solid var(--border-hair);
+  opacity: 0.42;
+  transition: opacity var(--dur-med) var(--ease);
+}
+.pilar:last-child { border-bottom: 1px solid var(--border-hair); }
+.pilar.is-active { opacity: 1; }
+
+.pilar__num {
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  color: var(--gold-dim);
+  transition: color var(--dur-med) var(--ease);
+}
+.pilar.is-active .pilar__num { color: var(--gold); }
+
+.pilar h3 {
+  font-size: 1.2rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+}
+
+.pilar p {
+  color: var(--text-secondary);
+  max-width: 58ch;
+  line-height: 1.7;
+}
+
+@media (max-width: 800px) {
+  .estrutura .container { grid-template-columns: 1fr; }
+  .estrutura__head { position: static; }
+  .pilar { opacity: 1; }
+}
