@@ -1,0 +1,6 @@
+# Documentos internos do repositório não fazem parte do site.
+# O Cloudflare Pages publica a raiz inteira, então estes caminhos voltam para a home.
+/docs/*          /  302
+/CLAUDE.md       /  302
+/CONSTRAINTS.md  /  302
+/README.md       /  302
