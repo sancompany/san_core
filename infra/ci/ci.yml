@@ -1,0 +1,47 @@
+# COLAR EM: .github/workflows/ci.yml
+# Arquivo em .github/workflows/ é escrito à mão pelo dono do repositório (skill leis, 1b).
+# Antes de colar, conferir a versão atual do gitleaks e do actions/checkout.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 9 * * 1'   # toda segunda, 06:00 em Brasília
+
+permissions:
+  contents: read
+
+jobs:
+  banco:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17   # mesma versão maior dos projetos Supabase da San & Co.
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Migrations e testes de banco
+        env:
+          PGURL: postgresql://postgres:postgres@localhost:5432/postgres
+        run: tests/db/run.sh
+
+  segredos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # sem isso, varre só o último commit
+      - name: Instalar gitleaks
+        run: |
+          VERSAO=8.28.0         # conferir a atual antes de colar
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${VERSAO}/gitleaks_${VERSAO}_linux_x64.tar.gz" \
+            | tar -xz gitleaks
+      - run: ./gitleaks detect --source . --redact --exit-code 1
