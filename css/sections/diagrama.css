@@ -185,7 +185,6 @@
   padding: 0.25rem 0.7rem;
   margin-bottom: 1rem;
 }
-.projeto-card__status[data-status="em desenvolvimento"],
 .projeto-card__status[data-status="em breve"],
 .projeto-card__status[data-status="ideia"] { color: var(--text-tertiary); }
 

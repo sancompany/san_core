@@ -5,14 +5,11 @@
  * próprio arquivo `sanco-info.json`, basta trocar PROJETOS por um fetch
  * por projeto, mantendo a mesma forma de objeto usada aqui.
  *
- * url pode ser null: projeto sem site no ar não mostra o botão "Abrir site".
- *
  * status aceita três valores, que definem automaticamente o tamanho do nó
  * e a distância até o núcleo (quanto mais maduro, maior e mais distante):
  *   'ideia'     -> nó pequeno, órbita próxima, gira mais rápido
  *   'em breve'  -> nó médio, órbita intermediária
  *   'operação'  -> nó grande, órbita distante, gira mais devagar
- * O núcleo fica fixo no centro e pode ter qualquer status (só aparece no card).
  *
  * As posições NÃO são fixas: cada projeto orbita o núcleo continuamente e
  * um projeto novo já entra na órbita certa sozinho, sem coordenada manual.
@@ -22,43 +19,43 @@ const PROJETOS = [
   {
     id: 'core',
     core: true,
-    nome: 'San Core',
-    area: 'Comunidade',
-    descricao: 'Comunidade, acervo educacional e ferramentas para quem constrói no ecossistema San & Co.',
-    status: 'em desenvolvimento',
+    nome: 'Núcleo Operacional',
+    area: 'Infraestrutura, engenharia e governança',
+    descricao: 'O centro que concentra domínio, dados e inteligência para todo o ecossistema San & Co.',
+    status: 'operação',
     url: 'https://sancocore.com.br',
   },
   {
-    id: 'sancopay',
-    nome: 'SancoPay',
-    area: 'Gateway de pagamentos',
-    descricao: 'Gateway de pagamento whitelabel (Pix, boleto e cartão) do ecossistema.',
+    id: 'checkout',
+    nome: 'San Checkout',
+    area: 'Motor de pagamentos universal',
+    descricao: 'Motor de pagamento whitelabel (Pix e cartão) do ecossistema.',
     status: 'operação',
     url: 'https://checkout.sancocore.com.br',
   },
   {
-    id: 'mostrai',
-    nome: 'Mostraí',
-    area: 'Publicidade em painéis de LED',
-    descricao: 'Painéis de LED para publicidade e marketplace de anúncios.',
-    status: 'operação',
-    url: 'https://mostrai.sancocore.com.br',
-  },
-  {
     id: 'humano',
     nome: 'Humano',
-    area: 'Gestão financeira empresarial',
-    descricao: 'Gestão financeira para empresas — em fase de ideia.',
-    status: 'ideia',
-    url: null,
+    area: 'Gestão financeira executiva e rotineira',
+    descricao: 'Dashboard pessoal de finanças, patrimônio e rotina.',
+    status: 'em breve',
+    url: 'https://humano.sancocore.com.br',
+  },
+  {
+    id: 'trimundi',
+    nome: 'Trimundi',
+    area: 'Produtora de eventos',
+    descricao: 'Produção e organização de eventos.',
+    status: 'em breve',
+    url: 'https://trimundi.sancocore.com.br',
   },
   {
     id: 'anakor',
     nome: 'Anakor',
-    area: 'Marketplace',
-    descricao: 'Marketplace — em fase de ideia.',
+    area: 'E-commerce local',
+    descricao: 'Loja online voltada ao comércio local — ainda em fase de ideia.',
     status: 'ideia',
-    url: null,
+    url: 'https://anakor.sancocore.com.br',
   },
 ];
 
@@ -166,23 +163,18 @@ if (frame) {
 const card = document.querySelector('[data-projeto-card]');
 const cardPanel = card ? card.querySelector('.projeto-card__panel') : null;
 
-let focoAntes = null;
-
 function openProjetoCard(p) {
   if (!card || !cardPanel) return;
-  focoAntes = document.activeElement;
   cardPanel.innerHTML = `
     <button type="button" class="projeto-card__close" aria-label="Fechar">&times;</button>
     <span class="projeto-card__status" data-status="${p.status}">${p.status}</span>
     <h3>${p.nome}</h3>
     <p class="projeto-card__area">${p.area}</p>
     <p class="projeto-card__desc">${p.descricao}</p>
-    ${p.url ? `<a class="btn btn-primary" href="${p.url}" target="_blank" rel="noopener">Abrir site</a>` : ''}
+    <a class="btn btn-primary" href="${p.url}" target="_blank" rel="noopener">Abrir site</a>
   `;
   card.classList.add('is-open');
-  const fechar = cardPanel.querySelector('.projeto-card__close');
-  fechar.addEventListener('click', closeProjetoCard);
-  fechar.focus();
+  cardPanel.querySelector('.projeto-card__close').addEventListener('click', closeProjetoCard);
   document.addEventListener('keydown', onEscClose);
 }
 
@@ -190,7 +182,6 @@ function closeProjetoCard() {
   if (!card) return;
   card.classList.remove('is-open');
   document.removeEventListener('keydown', onEscClose);
-  if (focoAntes) focoAntes.focus();
 }
 
 function onEscClose(e) {
