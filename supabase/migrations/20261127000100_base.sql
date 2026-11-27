@@ -41,29 +41,36 @@ create table public.user_roles (
   primary key (user_id, role)
 );
 
-create table public.pacotes_passes (
+-- Passe avulso, quantidade livre entre o mínimo e o máximo por pedido.
+-- Um preço ativo por vez; trocar o preço é desativar a linha e criar outra,
+-- para que pedidos antigos continuem apontando para o preço que pagaram.
+create table public.precos_passe (
   id                 uuid primary key default gen_random_uuid(),
-  nome               text not null unique,
-  quantidade_passes  integer not null check (quantidade_passes > 0),
-  preco              numeric(10,2) not null check (preco >= 5.00),  -- piso da Asaas, API.md §9.1
-  beneficios         text[] not null default '{}',
-  ordem              smallint not null default 0,
-  ativo              boolean not null default true
+  preco_unitario     numeric(10,2) not null check (preco_unitario > 0),
+  minimo_por_pedido  integer not null check (minimo_por_pedido >= 1),
+  maximo_por_pedido  integer not null,
+  -- a taxa do Checkout é isentada (isentarTaxa): o comprador paga o preço anunciado
+  isentar_taxa       boolean not null default true,
+  ativo              boolean not null default true,
+  created_at         timestamptz not null default now(),
+  check (maximo_por_pedido >= minimo_por_pedido),
+  -- o menor pedido possível precisa passar do piso da Asaas (API.md §9.1)
+  check (not isentar_taxa or preco_unitario * minimo_por_pedido >= 5.00)
 );
+create unique index precos_passe_um_ativo on public.precos_passe ((true)) where ativo;
 
-insert into public.pacotes_passes (nome, quantidade_passes, preco, ordem) values
-  ('Inicial',   10,  19.90, 1),
-  ('Padrão',    30,  49.90, 2),
-  ('Apoiador', 100, 129.90, 3);
+insert into public.precos_passe (preco_unitario, minimo_por_pedido, maximo_por_pedido)
+  values (2.90, 2, 500);
 
 -- O id vai no link do Checkout: UUID, nunca sequencial (skill checkout, regra 1).
--- valor e passes são congelados no pedido: mudar o pacote depois não muda pedido aberto.
+-- valor e passes são congelados no pedido: mudar o preço depois não muda pedido aberto.
 create table public.pedidos (
   id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null references public.profiles (id) on delete restrict,
-  pacote_id   uuid not null references public.pacotes_passes,
-  valor       numeric(10,2) not null check (valor >= 5.00),
+  preco_id    uuid not null references public.precos_passe,
   passes      integer not null check (passes > 0),
+  valor       numeric(10,2) not null check (valor >= 5.00),   -- piso da Asaas
+  isentar_taxa boolean not null,
   status      text not null default 'pendente'
               check (status in ('pendente', 'pago', 'cancelado', 'estornado')),
   charge_id   text,
@@ -76,7 +83,6 @@ create index pedidos_pendentes_idx on public.pedidos (created_at) where status =
 create table public.passes_ledger (
   id                    bigint generated always as identity primary key,
   user_id               uuid not null references public.profiles (id) on delete restrict,
-  pacote_id             uuid references public.pacotes_passes,
   pedido_id             uuid references public.pedidos,
   quantidade            integer not null check (quantidade <> 0),
   tipo                  text not null check (tipo in ('compra', 'estorno', 'ajuste', 'bonus')),
@@ -217,6 +223,30 @@ begin
 end;
 $$;
 
+-- Compra e estorno têm de bater com o pedido: mesma conta, mesma quantidade.
+-- Impede creditar 100 passes num pedido de 2 por erro de código no webhook.
+create function public.lancamento_confere_pedido()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare
+  v_pedido public.pedidos;
+begin
+  if new.tipo in ('compra', 'estorno') then
+    select * into v_pedido from public.pedidos where id = new.pedido_id;
+    if v_pedido.user_id <> new.user_id then
+      raise exception 'lançamento de outra conta: pedido %', new.pedido_id;
+    end if;
+    if abs(new.quantidade) <> v_pedido.passes then
+      raise exception 'quantidade % não bate com os % passes do pedido %',
+        new.quantidade, v_pedido.passes, new.pedido_id;
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger passes_ledger_confere before insert on public.passes_ledger
+  for each row execute function public.lancamento_confere_pedido();
+
 create trigger passes_ledger_recalcula after insert on public.passes_ledger
   for each row execute function public.recalcular_nivel();
 
@@ -260,7 +290,7 @@ revoke all on all tables in schema public from anon, authenticated;
 revoke execute on all functions in schema public from public, anon, authenticated;
 grant execute on function public.tem_papel(public.papel), public.nivel_do_usuario() to anon, authenticated;
 
-grant select on public.niveis_config, public.pacotes_passes, public.conteudos,
+grant select on public.niveis_config, public.precos_passe, public.conteudos,
                public.conteudos_corpo, public.produtos_comunidade to anon, authenticated;
 grant select on public.profiles, public.user_roles, public.pedidos,
                public.passes_ledger, public.escalonamentos, public.agent_logs to authenticated;
@@ -275,7 +305,7 @@ grant update (status, atribuido_a) on public.escalonamentos to authenticated;
 alter table public.niveis_config       enable row level security;
 alter table public.profiles            enable row level security;
 alter table public.user_roles          enable row level security;
-alter table public.pacotes_passes      enable row level security;
+alter table public.precos_passe        enable row level security;
 alter table public.pedidos             enable row level security;
 alter table public.passes_ledger       enable row level security;
 alter table public.webhook_eventos     enable row level security;  -- sem política: só service_role
@@ -286,7 +316,7 @@ alter table public.escalonamentos      enable row level security;
 alter table public.agent_logs          enable row level security;
 
 create policy niveis_leitura on public.niveis_config for select using (true);
-create policy pacotes_leitura on public.pacotes_passes for select using (ativo or public.tem_papel('admin'));
+create policy precos_leitura on public.precos_passe for select using (ativo or public.tem_papel('admin'));
 
 create policy perfil_proprio on public.profiles for select
   using (id = auth.uid() or public.tem_papel('support') or public.tem_papel('admin'));

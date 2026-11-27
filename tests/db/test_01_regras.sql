@@ -50,29 +50,52 @@ insert into public.conteudos_corpo (conteudo_id, corpo) values
   ('c1000000-0000-0000-0000-000000000000', 'corpo fechado'),
   ('c2000000-0000-0000-0000-000000000000', 'corpo rascunho');
 
--- B vira Membro comprando o pacote Inicial.
-insert into public.pedidos (id, user_id, pacote_id, valor, passes, status)
-  select '90000000-0000-0000-0000-000000000001', :B, id, preco, quantidade_passes, 'pago'
-    from public.pacotes_passes where nome = 'Inicial';
+-- B vira Membro comprando o mínimo: 2 passes a R$ 2,90.
+insert into public.pedidos (id, user_id, preco_id, passes, valor, isentar_taxa, status)
+  select '90000000-0000-0000-0000-000000000001', :B, id, 2, 2 * preco_unitario, isentar_taxa, 'pago'
+    from public.precos_passe where ativo;
 insert into public.passes_ledger (user_id, pedido_id, quantidade, tipo, referencia_pagamento)
-  values (:B, '90000000-0000-0000-0000-000000000001', 10, 'compra', 'pay_teste');
+  values (:B, '90000000-0000-0000-0000-000000000001', 2, 'compra', 'pay_teste');
 
 -- 1. Perfil nasce com a conta, Gratuito, com o nome do cadastro.
 do $$ begin
   assert (select nivel_atual from public.profiles where id = 'aaaaaaaa-0000-0000-0000-000000000001') = 0, 'A deveria ser Gratuito';
   assert (select nome from public.profiles where id = 'aaaaaaaa-0000-0000-0000-000000000001') = 'Ana', 'nome do cadastro';
   assert (select nivel_atual from public.profiles where id = 'bbbbbbbb-0000-0000-0000-000000000002') = 1, 'B deveria ser Membro';
-  assert (select total_passes from public.profiles where id = 'bbbbbbbb-0000-0000-0000-000000000002') = 10, 'B deveria ter 10 passes';
+  assert (select total_passes from public.profiles where id = 'bbbbbbbb-0000-0000-0000-000000000002') = 2, 'B deveria ter 2 passes';
 end $$;
+
+-- 1b. Preço da v1: R$ 2,90, mínimo 2, taxa isentada; um preço ativo por vez;
+--     pedido abaixo do piso da Asaas não existe.
+do $$ begin
+  assert (select (preco_unitario, minimo_por_pedido, isentar_taxa) from public.precos_passe where ativo)
+         = (2.90::numeric(10,2), 2, true), 'preço da v1';
+end $$;
+select teste.espera_erro($$insert into public.precos_passe (preco_unitario, minimo_por_pedido, maximo_por_pedido)
+  values (3.00, 2, 10)$$, 'precos_passe_um_ativo');
+select teste.espera_erro($$insert into public.precos_passe (preco_unitario, minimo_por_pedido, maximo_por_pedido, ativo)
+  values (2.90, 1, 10, false)$$, 'check');
+select teste.espera_erro($$insert into public.pedidos (user_id, preco_id, passes, valor, isentar_taxa)
+  select 'aaaaaaaa-0000-0000-0000-000000000001', id, 1, 2.90, true from public.precos_passe where ativo$$, 'check');
+
+-- 1c. Crédito tem de bater com o pedido: quantidade e conta.
+begin;
+insert into public.pedidos (id, user_id, preco_id, passes, valor, isentar_taxa, status)
+  select '90000000-0000-0000-0000-000000000002', :A, id, 3, 8.70, true, 'pago' from public.precos_passe where ativo;
+select teste.espera_erro($$insert into public.passes_ledger (user_id, pedido_id, quantidade, tipo)
+  values ('aaaaaaaa-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000002', 100, 'compra')$$, 'não bate');
+select teste.espera_erro($$insert into public.passes_ledger (user_id, pedido_id, quantidade, tipo)
+  values ('bbbbbbbb-0000-0000-0000-000000000002', '90000000-0000-0000-0000-000000000002', 3, 'compra')$$, 'outra conta');
+rollback;
 
 -- 2. Webhook repetido não credita duas vezes.
 select teste.espera_erro($$insert into public.passes_ledger (user_id, pedido_id, quantidade, tipo)
-  values ('bbbbbbbb-0000-0000-0000-000000000002', '90000000-0000-0000-0000-000000000001', 10, 'compra')$$, 'unique');
+  values ('bbbbbbbb-0000-0000-0000-000000000002', '90000000-0000-0000-0000-000000000001', 2, 'compra')$$, 'unique');
 
 -- 3. Estorno zera o saldo e rebaixa para Gratuito; o lançamento original continua lá.
 begin;
 insert into public.passes_ledger (user_id, pedido_id, quantidade, tipo)
-  values (:B, '90000000-0000-0000-0000-000000000001', -10, 'estorno');
+  values (:B, '90000000-0000-0000-0000-000000000001', -2, 'estorno');
 do $$ begin
   assert (select total_passes from public.profiles where id = 'bbbbbbbb-0000-0000-0000-000000000002') = 0, 'saldo após estorno';
   assert (select nivel_atual from public.profiles where id = 'bbbbbbbb-0000-0000-0000-000000000002') = 0, 'rebaixa após estorno';
@@ -117,8 +140,8 @@ select teste.espera_erro($$update public.profiles set total_passes = 999$$, 'per
 select teste.espera_erro($$update public.profiles set nivel_atual = 1$$, 'permission');
 select teste.espera_erro($$insert into public.passes_ledger (user_id, quantidade, tipo, motivo, criado_por)
   values (auth.uid(), 100, 'bonus', 'x', auth.uid())$$, 'permission');
-select teste.espera_erro($$insert into public.pedidos (user_id, pacote_id, valor, passes)
-  select auth.uid(), id, 5, 100 from public.pacotes_passes limit 1$$, 'permission');
+select teste.espera_erro($$insert into public.pedidos (user_id, preco_id, passes, valor, isentar_taxa)
+  select auth.uid(), id, 100, 5, true from public.precos_passe limit 1$$, 'permission');
 select teste.espera_erro($$insert into public.user_roles (user_id, role) values (auth.uid(), 'admin')$$, 'row-level security');
 select teste.espera_erro($$select * from public.webhook_eventos$$, 'permission');
 update public.profiles set nome = 'Ana Paula';

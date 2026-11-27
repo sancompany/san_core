@@ -13,7 +13,9 @@ Acesso"**. A interface pode dizer só "passes".
 o agente gera:
 - rendimento, retorno, lucro, dividendo ou ganho financeiro passivo;
 - participação no lucro, no capital, no CNPJ ou em decisões da empresa,
-  incluindo as palavras "cota", "participação", "sócio" e "investimento";
+  incluindo as palavras "cota", "participação", "sócio", "sociedade",
+  "investimento", "ação" e "acionista", inclusive em comparação ("é tipo
+  uma ação");
 - valorização do passe ou revenda;
 - ganho por indicar novos compradores.
 
