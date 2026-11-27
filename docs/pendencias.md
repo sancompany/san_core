@@ -17,6 +17,8 @@
   login virar real.
 - `js/contato.js` descarta a mensagem e mostra "enviado".
 - Endereço inexistente responde 200 com a home: falta uma página 404.
+- No celular, o diagrama da home empilha todos os projetos sob o núcleo e
+  impede o clique (medido em 27/11/2026, iPhone 13, também em produção).
 - Não há Termos de Uso nem Política de Privacidade.
 - O log de IP de login por 6 meses (Marco Civil) não está garantido
   (`docs/inventario-de-dados.md`).
